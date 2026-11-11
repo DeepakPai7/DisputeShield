@@ -1,0 +1,17 @@
+{
+  "name": "paypal-disputeshield-ai",
+  "version": "1.0.0",
+  "description": "AI Dispute Lawyer for PayPal Sellers - PayPal AI Hackathon",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,cyan\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "diagnose": "node server/scripts/diagnose.js",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "test": "npm run test --prefix server",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "puppeteer-core": "^25.16.0"
+  }
+}
