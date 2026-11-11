@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// Base URL: uses import.meta.env.VITE_API_URL in production, empty string for local dev (which falls back to /api with Vite proxy)
+const rawBaseUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+const API_BASE_URL = rawBaseUrl
+  ? (rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`)
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 45000,
 });
 
@@ -46,7 +52,7 @@ export const uploadManualEvidence = (disputeId, formData) =>
   api.post(`/disputes/${disputeId}/evidence`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }).then(r => r.data);
-export const getEvidencePdfUrl = (disputeId) => `/api/disputes/${disputeId}/evidence-pdf`;
+export const getEvidencePdfUrl = (disputeId) => `${API_BASE_URL}/disputes/${disputeId}/evidence-pdf`;
 
 // Stats, Settings, Audit & PayPal API Logs
 export const getStats = () => api.get('/stats').then(r => r.data);

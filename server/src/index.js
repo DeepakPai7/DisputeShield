@@ -34,8 +34,22 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
+
+// CORS Configuration: allow CLIENT_ORIGIN (exact match, no trailing slash) and http://localhost:5173
+const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+if (process.env.CLIENT_ORIGIN) {
+  const envOrigins = process.env.CLIENT_ORIGIN.split(',')
+    .map(o => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  for (const o of envOrigins) {
+    if (!allowedOrigins.includes(o)) {
+      allowedOrigins.push(o);
+    }
+  }
+}
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json({ limit: '15mb' }));
@@ -47,7 +61,7 @@ app.use('/uploads', express.static(config.uploadDir));
 // Setup Required Gate Middleware
 app.use((req, res, next) => {
   // Always permit health and config status
-  if (req.path.startsWith('/api/health') || req.path.startsWith('/api/config')) {
+  if (req.path.startsWith('/api/health') || req.path.startsWith('/health') || req.path.startsWith('/api/config')) {
     return next();
   }
 
@@ -65,6 +79,7 @@ app.use((req, res, next) => {
 
 // Mount API routes
 app.use('/api/health', healthRoutes);
+app.use('/health', healthRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/diagnostics', diagnosticsRoutes);
 app.use('/api/store', storeRoutes);
@@ -101,9 +116,9 @@ function bootstrap() {
   // Start background dispute poller
   startDisputePoller();
 
-  const PORT = config.port || 5000;
-  app.listen(PORT, () => {
-    logger.info(`DisputeShield AI Server listening on http://localhost:${PORT}`);
+  const PORT = process.env.PORT || config.port || 5000;
+  app.listen(PORT, '0.0.0.0', () => {
+    logger.info(`DisputeShield AI Server listening on http://0.0.0.0:${PORT}`);
     logger.info(`Health check: http://localhost:${PORT}/api/health`);
     logger.info(`Config status: http://localhost:${PORT}/api/config/status`);
     logger.info(`Diagnostics: http://localhost:${PORT}/api/diagnostics`);
